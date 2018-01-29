@@ -22,8 +22,8 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session):
         },
         'card': {
             'type': 'Simple',
-            'title': "SessionSpeechlet - " + title,
-            'content': "SessionSpeechlet - " + output
+            'title': title,
+            'content': output
         },
         'reprompt': {
             'outputSpeech': {
@@ -127,14 +127,89 @@ def handle_session_end_request():
 #        intent['name'], speech_output, reprompt_text, should_end_session))
 
 def turn_heatpump_on(intent, session):
-	name = intent["slots"]["room"]["value"]
-	heatpump.turn_on(name)
-	return "Turning Heatpump On"
+    name = intent["slots"]["room"]["value"]
+    speech_output = heatpump.turn_on(name)
+    return build_response({}, build_speechlet_response(f"Turn Heatpump On [{name}]", speech_output, None, True))
 
 def turn_heatpump_off(intent, session):
-	name = intent["slots"]["room"]["value"]
-	heatpump.turn_off(name)
-	return "Turning Heatpump Off"
+    name = intent["slots"]["room"]["value"]
+    speech_output = heatpump.turn_off(name)
+    return build_response({}, build_speechlet_response(f"Turn Heatpump Off [{name}]", speech_output, None, True))
+
+def get_heatpump_temp(intent, session):
+    name = intent["slots"]["room"]["value"]
+
+    speech_output = heatpump.get_temp(name)
+    
+    card_title = intent['name']
+    session_attributes = {}
+    should_end_session = False
+    reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+def get_room_temp(intent, session):
+    name = intent["slots"]["room"]["value"]
+
+    speech_output = heatpump.get_room_temp(name)
+    
+    card_title = intent['name']
+    session_attributes = {}
+    should_end_session = False
+    reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+def get_heatpump_status(intent, session):
+    name = intent["slots"]["room"]["value"]
+
+    speech_output = heatpump.get_status(name)
+    
+    card_title = intent['name']
+    session_attributes = {}
+    should_end_session = False
+    reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+def set_heatpump_temp(intent, session):
+    name = intent["slots"]["room"]["value"]
+    temp = intent["slots"]["temp"]["value"]
+
+    speech_output = heatpump.set_temp(name, temp)
+    
+    card_title = intent['name']
+    session_attributes = {}
+    should_end_session = False
+    reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+def set_heatpump_fan(intent, session):
+    name = intent["slots"]["room"]["value"]
+    fan = intent["slots"]["fan"]["value"]
+
+    speech_output = heatpump.set_fan(name, fan)
+    
+    card_title = intent['name']
+    session_attributes = {}
+    should_end_session = False
+    reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+def set_heatpump_mode(intent, session):
+    name = intent["slots"]["room"]["value"]
+    mode = intent["slots"]["mode"]["value"]
+
+    speech_output = heatpump.set_mode(name, mode)
+    
+    card_title = intent['name']
+    session_attributes = {}
+    should_end_session = False
+    reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
 
 # --------------- Events ------------------
 
@@ -174,6 +249,18 @@ def on_intent(intent_request, session):
     	return turn_heatpump_on(intent, session)
     elif intent_name == "TurnHeatpumpOffIntent":
     	return turn_heatpump_off(intent, session)
+    elif intent_name == "GetHeatpumpTempIntent":
+        return get_heatpump_temp(intent, session)
+    elif intent_name == "GetRoomTempIntent":
+        return get_room_temp(intent, session)
+    elif intent_name == "GetHeatpumpStatusIntent":
+        return get_heatpump_status(intent, session)
+    elif intent_name == "SetHeatpumpTempIntent":
+        return set_heatpump_temp(intent, session)
+    elif intent_name == "SetHeatpumpFanIntent":
+        return set_heatpump_fan(intent, session)
+    elif intent_name == "SetHeatpumpModeIntent":
+        return set_heatpump_mode(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
@@ -207,7 +294,7 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    if (event['session']['application']['applicationId'] != ""):
+    if (event['session']['application']['applicationId'] != "amzn1.ask.skill.23092455-b10c-4ed2-8036-f9d8f7d11012"):
          raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
