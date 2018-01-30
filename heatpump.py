@@ -117,38 +117,24 @@ def get_room(name):
 			return room
 	return None
 
-def set_power(name, power):
+def set_power(unitid, power):
 	cookie = login()
 
 	if cookie == None:
-		return 'Failed to Login'
-
-	op = 'on' if power == 1 else 'off'
-
-	room = get_room(name)
-
-	if room == None:
-		logout()
-		return 'Failed to find ' + name
-
-	room_name = room["name"]
-	unitid = room["unitid"]
+		return False
 		
-	status = get_unit_status(cookie, unitid)
-	if status.power == power:
-		logout()
-		return 'Heatpump is already ' + op
 	if send_set_power(cookie, unitid, power):
 		logout()
-		return 'Successfully turned ' + op + ' ' + name
+		return True
+
 	logout()
-	return 'Failed to turn ' + op + ' ' + name	
+	return False
 
-def turn_on(name):
-	return set_power(name, 1)
+def turn_on(unitid):
+	return set_power(unitid, 1)
 
-def turn_off(name):
-	return set_power(name, 0)
+def turn_off(unitid):
+	return set_power(unitid, 0)
 
 def get_temp(name):
 	cookie = login()
@@ -196,19 +182,11 @@ def get_room_temp(name):
 	logout()
 	return f"The current room temperature is {status.roomtemp}"
 
-def get_status(name):
+def get_status(unitid):
 	cookie = login()
 
 	if cookie == None:
 		return "Failed to Login"
-
-	room = get_room(name)
-
-	if room == None:
-		logout()
-		return f"Failed to find {name}"
-
-	unitid = room["unitid"]
 
 	status = get_unit_status(cookie, unitid)
 
@@ -217,7 +195,7 @@ def get_status(name):
 		return "Failed to get the current status"
 
 	logout()
-	return f'The {name} heatpump is currently set to {status.settemp} degrees with the fan set to {status.setfan}'
+	return status
 
 def set_temp(name, temp):
 	cookie = login()
@@ -295,5 +273,3 @@ def set_mode(name, mode):
 		return f'Set mode on the {name} heatpump to {mode}'
 	logout()
 	return f'Failed to set mode on the {name} heatpump'
-
-print(set_mode("Hallway", "cool"))
