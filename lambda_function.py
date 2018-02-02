@@ -124,6 +124,33 @@ def set_target_temperature(appliance_id, access_token, correlation_token):
 
     return generate_response("Response", context, appliance_id, correlation_token)
 
+def set_percentage(appliance_id, access_token, correlation_token, percentage):
+    log("DEBUG", f"set_percentage: {appliance_id}")
+
+    now = datetime.now()
+
+    if not heatpump.set_fan(appliance_id, percentage):
+        return None
+
+    context = {
+        "properties": [{
+            "namespace": "Alexa.PercentageController",
+            "name": "percentage",
+            "value": percentage,
+            "timeOfSample": get_utc_timestamp(now),
+            "uncertaintyInMilliseconds": 1000
+        }]
+    }
+
+    return generate_response("Response", context, appliance_id, correlation_token)
+
+def set_power_level(appliance_id, access_token, correlation_token):
+    log("DEBUG", f"set_power_level: {appliance_id}")
+
+    context = {}
+
+    return generate_response("Response", context, appliance_id, correlation_token)
+
 
 def report_state(appliance_id, access_token, correlation_token):
     log("DEBUG", f"report_state(applianceId: {appliance_id}")
@@ -181,6 +208,13 @@ def report_state(appliance_id, access_token, correlation_token):
                 "value": mode,
                 "timeOfSample": get_utc_timestamp(now),
                 "uncertaintyInMilliseconds": 6000
+            },
+            {
+                "namespace": "Alexa.PercentageController",
+                "name": "percentage",
+                "value": 100,
+                "timeOfSample": get_utc_timestamp(now),
+                "uncertaintyInMilliseconds": 1000
             }
         ]
     }
@@ -223,6 +257,11 @@ def handle_control(event, session):
         response = report_state(appliance_id, access_token, correlation_token)
     elif name == "SetTargetTemperature":
         response = set_target_temperature(appliance_id, access_token, correlation_token)
+    elif name == "SetPercentage":
+        percentage = event["directive"]["payload"]["percentage"]
+        response = set_percentage(appliance_id, access_token, correlation_token, percentage)
+    elif name == "SetPowerLevel":
+        response = set_power_level(appliance_id, access_token, correlation_token)
     else:
         log("ERROR", f"No supported directive name: {name}")
         return generate_response("UnsupportedOperationError", {}, appliance_id, correlation_token)
@@ -240,6 +279,10 @@ def lambda_handler(event, session):
     elif namespace == "Alexa.PowerController":
         return handle_control(event, session)
     elif namespace == "Alexa.ThermostatController":
+        return handle_control(event, session)
+    elif namespace == "Alexa.PercentageController":
+        return handle_control(event, session)
+    elif namespace == "Alexa.PowerLevelController":
         return handle_control(event, session)
 
     error_message = f"No supported namespace: {namespace}"

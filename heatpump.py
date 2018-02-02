@@ -218,25 +218,17 @@ def set_temp(name, temp):
 	return f'Failed to set temperature on the {name} heatpump'
 
 
-def set_fan(name, fan):
+def set_fan(unitid, fan):
 	cookie = login()
 
 	if cookie == None:
 		return "Failed to Login"
 
-	room = get_room(name)
-
-	if room == None:
-		logout()
-		return f"Failed to find {name}"
-
-	unitid = room["unitid"]
-
 	if send_set_fan(cookie, unitid, fan):
 		logout()
-		return f'Set fan speed on the {name} heatpump to {fan}'
+		return True
 	logout()
-	return f'Failed to set fan speed on the {name} heatpump'
+	return False
 
 def set_mode(name, mode):
 	mode_num = None
@@ -265,7 +257,7 @@ def set_mode(name, mode):
 	if room == None:
 		logout()
 		return f"Failed to find {name}"
-
+		
 	unitid = room["unitid"]
 
 	if send_set_mode(cookie, unitid, mode_num):
